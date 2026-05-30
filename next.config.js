@@ -4,6 +4,11 @@ const nextConfig = {
 	reactStrictMode: true,
 	transpilePackages: ["@frankencoin/zchf", "@frankencoin/api"],
 
+	// IPFS static hosting: emit a fully static site to ./out
+	output: "export",
+	trailingSlash: true,
+	images: { unoptimized: true },
+
 	webpack: (config) => {
 		// Stub out optional peer deps not used in this app
 		config.resolve.alias = {
@@ -28,35 +33,8 @@ const nextConfig = {
 	// 	},
 	// ],
 
-	// @dev: Needed for SAFE testing locally
-	headers: async () => [
-		{
-			source: "/(.*)",
-			headers: [
-				{
-					key: "Content-Security-Policy",
-					value: "frame-ancestors 'self' https://app.safe.global https://*.safe.global",
-				},
-			],
-		},
-		{
-			source: "/manifest.json",
-			headers: [
-				{
-					key: "Access-Control-Allow-Origin",
-					value: "*",
-				},
-				{
-					key: "Access-Control-Allow-Methods",
-					value: "GET",
-				},
-				{
-					key: "Access-Control-Allow-Headers",
-					value: "X-Requested-With, content-type, Authorization",
-				},
-			],
-		},
-	],
+	// @dev: `headers` removed — not supported with output: "export" (static IPFS build).
+	// Set these via the IPFS gateway / reverse proxy instead if needed.
 };
 
 module.exports = nextConfig;
