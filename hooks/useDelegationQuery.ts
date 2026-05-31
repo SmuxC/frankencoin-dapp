@@ -1,6 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
-import { Address, zeroAddress } from "viem";
-import { normalizeAddress } from "../utils/format";
+import { Address } from "viem";
 
 export type PonderDelegationQuery = {
 	owner: Address;
@@ -18,46 +16,14 @@ export type DelegationQuery = {
 	allDelegatees: Address[];
 };
 
+// The full delegation graph needs an indexer (event enumeration), removed in the
+// decentralized build. Returns empty — a connected user can still read/set their
+// own delegate on-chain via the governance actions.
 export const useDelegationQuery = (): DelegationQuery => {
-	const returnData: DelegationQuery = {
+	return {
 		owners: {},
 		delegatees: {},
 		allOwners: [],
 		allDelegatees: [],
 	};
-
-	const { data, loading } = useQuery(
-		gql`
-			{
-				equityDelegations {
-					items {
-						owner
-						delegatedTo
-					}
-				}
-			}
-		`,
-		{ fetchPolicy: "cache-first" }
-	);
-
-	if (loading || !data || !data.equityDelegations) {
-		return returnData;
-	}
-
-	const items = data.equityDelegations.items as PonderDelegationQuery[];
-
-	for (const i of items) {
-		const owner = normalizeAddress(i.owner);
-		const to = normalizeAddress(i.delegatedTo);
-
-		returnData.owners[owner] = to;
-		returnData.allOwners.push(owner);
-
-		if (!returnData.delegatees[to]) returnData.delegatees[to] = [];
-		returnData.delegatees[to].push(owner);
-
-		if (!returnData.allDelegatees.includes(to)) returnData.allDelegatees.push(to);
-	}
-
-	return returnData;
 };

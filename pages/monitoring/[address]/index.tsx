@@ -11,10 +11,10 @@ import { Address, formatUnits, zeroAddress } from "viem";
 import { useContractUrl } from "@hooks";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/redux.store";
-import { FRANKENCOIN_API_CLIENT, WAGMI_CONFIG } from "../../../app.config";
+import { WAGMI_CONFIG } from "../../../app.config";
 import { useEffect, useState } from "react";
 import { readContract } from "wagmi/actions";
-import { ApiMintingUpdateListing, MintingUpdateQuery } from "@frankencoin/api";
+import { MintingUpdateQuery } from "@frankencoin/api";
 import { ADDRESS, FrankencoinABI } from "@frankencoin/zchf";
 import { mainnet } from "viem/chains";
 
@@ -49,10 +49,9 @@ export default function PositionDetail() {
 			});
 			setReserve(reserveData);
 
-			const updates = await FRANKENCOIN_API_CLIENT.get<ApiMintingUpdateListing>(
-				`/positions/mintingupdates/position/${position.version}/${normalizeAddress(position.position)}`
-			);
-			setMintingUpdates(updates.data.list ?? []);
+			// Minting-update history needs an indexer (dropped). Live reserve above
+			// is read directly on-chain.
+			setMintingUpdates([]);
 		};
 
 		fetchAsync();

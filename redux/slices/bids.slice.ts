@@ -1,5 +1,7 @@
 import { createSlice, Dispatch } from "@reduxjs/toolkit";
-import { CONFIG, FRANKENCOIN_API_CLIENT } from "../../app.config";
+import { CONFIG } from "../../app.config";
+import { mainnet } from "viem/chains";
+import { loadBids } from "../../lib/onchain/bids";
 import { showErrorToast } from "@utils";
 import {
 	BidsState,
@@ -95,21 +97,13 @@ export const fetchBidsList =
 
 		try {
 			// ---------------------------------------------------------------
-			// Query raw data from backend api
-			const response1 = await FRANKENCOIN_API_CLIENT.get("/challenges/bids/list");
-			dispatch(slice.actions.setList(response1.data as ApiBidsListing));
-
-			const responseMapping = await FRANKENCOIN_API_CLIENT.get("/challenges/bids/mapping");
-			dispatch(slice.actions.setMapping(responseMapping.data as ApiBidsMapping));
-
-			const response2 = await FRANKENCOIN_API_CLIENT.get("/challenges/bids/bidders");
-			dispatch(slice.actions.setBidders(response2.data as ApiBidsBidders));
-
-			const response3 = await FRANKENCOIN_API_CLIENT.get("/challenges/bids/challenges");
-			dispatch(slice.actions.setChallenges(response3.data as ApiBidsChallenges));
-
-			const response4 = await FRANKENCOIN_API_CLIENT.get("/challenges/bids/positions");
-			dispatch(slice.actions.setPositions(response4.data as ApiBidsPositions));
+			// Read bids directly from chain (ChallengeAverted/Succeeded scan)
+			const { list, mapping, bidders, challenges, positions } = await loadBids(mainnet.id);
+			dispatch(slice.actions.setList(list));
+			dispatch(slice.actions.setMapping(mapping));
+			dispatch(slice.actions.setBidders(bidders));
+			dispatch(slice.actions.setChallenges(challenges));
+			dispatch(slice.actions.setPositions(positions));
 
 			// ---------------------------------------------------------------
 			// Finalizing, loaded set to true

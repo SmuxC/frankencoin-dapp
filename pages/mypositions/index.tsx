@@ -16,8 +16,6 @@ import { useContractUrl } from "@hooks";
 import { useConnection } from "wagmi";
 import ReportsPositionsYearlyTable from "@components/PageReports/ReportsPositionsYearlyTable";
 import { OwnerPositionDebt, OwnerPositionFees, OwnerPositionValueLocked } from "../report";
-import { FRANKENCOIN_API_CLIENT } from "../../app.config";
-import { ApiOwnerDebt, ApiOwnerValueLocked } from "@frankencoin/api";
 
 export default function Positions() {
 	const { address } = useConnection();
@@ -39,52 +37,12 @@ export default function Positions() {
 	}, []);
 
 	useEffect(() => {
-		if (address == undefined && overwrite == undefined) {
-			setOwnerPositionFees([]);
-			setOwnerPositionDebt([]);
-			setError("");
-			return;
-		}
-
-		setLoading(true);
-		const fetcher = async () => {
-			try {
-				const responsePositionsFees = await FRANKENCOIN_API_CLIENT.get(`/positions/owner/${overwrite || address}/fees`);
-				setOwnerPositionFees((responsePositionsFees.data as { t: number; f: string }[]).map((i) => ({ t: i.t, f: BigInt(i.f) })));
-
-				const responsePositionsDebt = await FRANKENCOIN_API_CLIENT.get(`/positions/owner/${overwrite || address}/debt`);
-				const debt = responsePositionsDebt.data as ApiOwnerDebt;
-
-				const yearly: OwnerPositionDebt[] = Object.keys(debt).map((y) => ({
-					y: Number(y),
-					d: BigInt(debt[Number(y)]),
-				}));
-
-				setOwnerPositionDebt(yearly);
-
-				const responsePositionsValueLocked = await FRANKENCOIN_API_CLIENT.get(`/prices/owner/${overwrite || address}/valueLocked`);
-				const value = responsePositionsValueLocked.data as ApiOwnerValueLocked;
-
-				const yearlyValue: OwnerPositionValueLocked[] = Object.keys(value).map((y) => ({
-					y: Number(y),
-					v: BigInt(value[Number(y)]),
-				}));
-
-				setOwnerPositionValueLocked(yearlyValue);
-
-				// clear all errors
-				setError("");
-			} catch (error) {
-				if (typeof error == "string") {
-					setError(error);
-				} else {
-					setError("Something did not work correctly");
-				}
-			}
-		};
-
-		fetcher();
-		setLoading(false);
+		// Per-owner fee/debt/value-locked analytics need an indexer (dropped).
+		// The position list itself comes from on-chain redux state.
+		setOwnerPositionFees([]);
+		setOwnerPositionDebt([]);
+		setOwnerPositionValueLocked([]);
+		setError("");
 	}, [address, overwrite]);
 
 	return (

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import AppBox from "@components/AppBox";
 import DisplayLabel from "@components/DisplayLabel";
 import DisplayAmount from "@components/DisplayAmount";
-import { usePoolStats } from "@hooks";
+import { usePoolStats, useWatchBlock } from "@hooks";
 import { formatBigInt, formatDuration, shortenAddress } from "@utils";
-import { useConnection, useBlockNumber, useChainId } from "wagmi";
+import { useConnection, useChainId } from "wagmi";
 import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
 import { erc20Abi, formatUnits, zeroAddress } from "viem";
 import AppButton from "@components/AppButton";
@@ -38,7 +38,7 @@ export default function EquityInteractionWithWFPSRedeem({ tokenFromTo, setTokenF
 	const [wfpsHolding, setWfpsHolding] = useState<bigint>(0n);
 	const [calculateProceeds, setCalculateProceeds] = useState<bigint>(0n);
 
-	const { data } = useBlockNumber({ watch: true });
+	const data = useWatchBlock();
 	const { address } = useConnection();
 	const poolStats = usePoolStats();
 	const chainId = mainnet.id;
@@ -239,7 +239,7 @@ export default function EquityInteractionWithWFPSRedeem({ tokenFromTo, setTokenF
 				/>
 
 				<div className="py-4 text-center z-0">
-<AppButton
+					<AppButton
 						className={`h-10 rounded-full`}
 						width="w-10"
 						onClick={() => setTokenFromTo({ from: toSymbol, to: fromSymbol })}
@@ -266,11 +266,19 @@ export default function EquityInteractionWithWFPSRedeem({ tokenFromTo, setTokenF
 				<div className="mx-auto mt-8 w-full flex-col">
 					<GuardSupportedChain chain={mainnet}>
 						{amount > wfpsAllowance ? (
-							<AppButton isLoading={isApproving} disabled={amount == 0n || !!error || !unlocked} onClick={() => handleApprove()}>
+							<AppButton
+								isLoading={isApproving}
+								disabled={amount == 0n || !!error || !unlocked}
+								onClick={() => handleApprove()}
+							>
 								Approve
 							</AppButton>
 						) : (
-							<AppButton isLoading={isRedeeming} disabled={amount == 0n || !!error || !unlocked} onClick={() => handleRedeem()}>
+							<AppButton
+								isLoading={isRedeeming}
+								disabled={amount == 0n || !!error || !unlocked}
+								onClick={() => handleRedeem()}
+							>
 								Unwrap and Redeem
 							</AppButton>
 						)}

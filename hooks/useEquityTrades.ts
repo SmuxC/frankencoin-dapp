@@ -1,6 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
-import { Address, isAddressEqual, zeroAddress } from "viem";
-import { PONDER_CLIENT } from "../app.config";
+import { Address } from "viem";
 
 export interface EquityTrade {
 	count: number;
@@ -12,39 +10,8 @@ export interface EquityTrade {
 	price: bigint;
 }
 
-const EQUITY_TRADES_QUERY = gql`
-	query EquityTrades($trader: String!) {
-		equityTrades(where: { trader: $trader }, orderBy: "count", orderDirection: "DESC") {
-			items {
-				amount
-				kind
-				price
-				shares
-				txHash
-				count
-				created
-			}
-		}
-	}
-`;
-
-export const useEquityTrades = (address: Address): EquityTrade[] => {
-	const { data } = useQuery<{ equityTrades: { items: EquityTrade[] } }>(EQUITY_TRADES_QUERY, {
-		client: PONDER_CLIENT,
-		fetchPolicy: "no-cache",
-		skip: isAddressEqual(address, zeroAddress),
-		variables: { trader: address.toLowerCase() },
-	});
-
-	if (!data?.equityTrades?.items) return [];
-
-	return data.equityTrades.items.map((i) => ({
-		count: Number(i.count),
-		created: Number(i.created),
-		txHash: i.txHash,
-		kind: i.kind,
-		amount: BigInt(i.amount),
-		shares: BigInt(i.shares),
-		price: BigInt(i.price),
-	}));
+// Trade history comes from an indexer (ponder), removed in the decentralized
+// build. Returns empty — the equity trades table renders nothing.
+export const useEquityTrades = (_address: Address): EquityTrade[] => {
+	return [];
 };

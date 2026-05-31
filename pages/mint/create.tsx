@@ -3,10 +3,10 @@ import Head from "next/head";
 import { useEffect } from "react";
 import { Address, decodeEventLog, isAddress, maxUint256, parseUnits } from "viem";
 import TokenInput from "@components/Input/TokenInput";
-import { useTokenData, useUserBalance } from "@hooks";
+import { useTokenData, useUserBalance, useWatchBlock } from "@hooks";
 import { useState } from "react";
 import AppButton from "@components/AppButton";
-import { useConnection, useBlockNumber, useChainId } from "wagmi";
+import { useConnection, useChainId } from "wagmi";
 import { erc20Abi } from "viem";
 import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
 import { formatBigInt, normalizeAddress, shortenAddress } from "@utils";
@@ -59,7 +59,7 @@ export default function PositionCreate({}) {
 	const [isInit, setIsInit] = useState(false);
 
 	const [userAllowance, setUserAllowance] = useState<bigint>(0n);
-	const { data } = useBlockNumber({ watch: true });
+	const data = useWatchBlock();
 	const account = useConnection();
 	const navigate = useNavigation();
 
@@ -473,7 +473,7 @@ export default function PositionCreate({}) {
 							autoFocus={true}
 						/>
 						{collTokenData.symbol != "NaN" && initialCollAmount > userAllowance ? (
-<AppButton
+							<AppButton
 								className="-mt-4"
 								isLoading={isConfirming == "approve"}
 								disabled={
@@ -588,7 +588,7 @@ export default function PositionCreate({}) {
 
 				<div className="mx-auto mt-8 w-72 max-w-full flex-col">
 					<GuardSupportedChain chain={mainnet}>
-<AppButton
+						<AppButton
 							disabled={minCollAmount == 0n || userAllowance < initialCollAmount || initialCollAmount == 0n || hasFormError()}
 							isLoading={isConfirming == "open"}
 							onClick={() => handleOpenPosition()}

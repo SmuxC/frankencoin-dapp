@@ -1,5 +1,7 @@
 import { createSlice, Dispatch } from "@reduxjs/toolkit";
-import { CONFIG, FRANKENCOIN_API_CLIENT } from "../../app.config";
+import { CONFIG } from "../../app.config";
+import { mainnet } from "viem/chains";
+import { loadLeadrate, loadSavings } from "../../lib/onchain/savings";
 import { showErrorToast } from "@utils";
 import {
 	DispatchApiLeadrateInfo,
@@ -109,15 +111,11 @@ export const fetchLeadrate =
 
 		try {
 			// ---------------------------------------------------------------
-			// Query raw data from backend api
-			const response1 = await FRANKENCOIN_API_CLIENT.get<ApiLeadrateInfo>("/savings/leadrate/info");
-			dispatch(slice.actions.setLeadrateInfo(response1.data));
-
-			const response2 = await FRANKENCOIN_API_CLIENT.get<ApiLeadrateProposed>("/savings/leadrate/proposals");
-			dispatch(slice.actions.setLeadrateProposed(response2.data));
-
-			const response3 = await FRANKENCOIN_API_CLIENT.get<ApiLeadrateRate>("/savings/leadrate/rates");
-			dispatch(slice.actions.setLeadrateRate(response3.data));
+			// Read current leadrate directly from chain (proposal/rate history dropped)
+			const { info, proposed, rate } = await loadLeadrate(mainnet.id);
+			dispatch(slice.actions.setLeadrateInfo(info));
+			dispatch(slice.actions.setLeadrateProposed(proposed));
+			dispatch(slice.actions.setLeadrateRate(rate));
 
 			// ---------------------------------------------------------------
 			// Finalizing, loaded set to true
@@ -142,18 +140,14 @@ export const fetchSavings =
 
 		try {
 			// ---------------------------------------------------------------
-			// Query raw data from backend api
-			const response4 = await FRANKENCOIN_API_CLIENT.get<ApiSavingsInfo>("/savings/core/info");
-			dispatch(slice.actions.setSavingsInfo(response4.data));
-
-			const response5 = await FRANKENCOIN_API_CLIENT.get<ApiSavingsBalance>(`/savings/core/balance/${account}`);
-			dispatch(slice.actions.setSavingsBalance(response5.data));
-
-			const response6 = await FRANKENCOIN_API_CLIENT.get<ApiSavingsActivity>(`/savings/core/activity/${account}`);
-			dispatch(slice.actions.setSavingsActivity(response6.data));
-
-			const response7 = await FRANKENCOIN_API_CLIENT.get<ApiSavingsRanked>("/savings/core/ranked");
-			dispatch(slice.actions.setSavingsRanked(response7.data));
+			// Read savings core directly from chain. Activity + ranked leaderboard
+			// are dropped (need indexed history); personal balance is read directly
+			// in the savings interaction card.
+			const { info, balance } = await loadSavings(mainnet.id, account);
+			dispatch(slice.actions.setSavingsInfo(info));
+			dispatch(slice.actions.setSavingsBalance(balance));
+			dispatch(slice.actions.setSavingsActivity([]));
+			dispatch(slice.actions.setSavingsRanked([]));
 
 			// ---------------------------------------------------------------
 			// Finalizing, loaded set to true

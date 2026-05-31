@@ -1,9 +1,7 @@
 import AppCard from "../AppCard";
 import AppBox from "../AppBox";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import { FRANKENCOIN_API_CLIENT } from "../../app.config";
-import { PriceHistoryRatio } from "@frankencoin/api";
+import { useState } from "react";
 import { formatCurrency } from "@utils";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -13,29 +11,8 @@ type ChartData = {
 };
 
 export default function HealthRatio() {
-	const [chartData, setChartData] = useState<ChartData[]>([]);
-
-	useEffect(() => {
-		const fetcher = async () => {
-			const response = await FRANKENCOIN_API_CLIENT.get("/prices/history/ratio");
-			const ratio = response.data as PriceHistoryRatio;
-
-			const keys = Object.keys(ratio.collateralRatioByFreeFloat).map((i) => parseInt(i));
-
-			const data: ChartData[] = keys.map((i) => ({
-				timestamp: i,
-				value: ratio.collateralRatioByFreeFloat[i],
-			}));
-
-			const date = Date.now() - 365 * 24 * 60 * 60 * 1000;
-
-			const chartFiltered = data.filter((i) => (i.timestamp < date ? false : true));
-
-			setChartData(chartFiltered);
-		};
-
-		fetcher();
-	}, []);
+	// Historical collateral-ratio chart needs an indexer (dropped). Renders empty.
+	const [chartData] = useState<ChartData[]>([]);
 
 	const chartListTimestamp = [...chartData].sort((a, b) => a.timestamp - b.timestamp);
 	const currentEntry = chartListTimestamp.at(-1);

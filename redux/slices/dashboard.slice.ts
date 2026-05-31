@@ -1,9 +1,6 @@
 import { createSlice, Dispatch } from "@reduxjs/toolkit";
-import { Address } from "viem";
 import { DashboardState, DispatchApiDailyLog, DispatchApiTransactionLog, DispatchBoolean } from "./dashboard.types";
-import { CONFIG, FRANKENCOIN_API_CLIENT } from "../../app.config";
 import { ApiDailyLog, ApiTransactionLog } from "@frankencoin/api";
-import { showErrorToast } from "@utils";
 
 // --------------------------------------------------------------------------------
 
@@ -56,39 +53,13 @@ export const reducer = slice.reducer;
 export const actions = slice.actions;
 
 // --------------------------------------------------------------------------------
+// Analytics (daily log + transaction log) come from the API/indexer and are
+// dropped in the decentralized build (the /report page is removed). No-ops.
 export const fetchDashboard = () => async (dispatch: Dispatch<DispatchBoolean | DispatchApiDailyLog>) => {
-	// ---------------------------------------------------------------
-	CONFIG.verbose && console.log("Loading [REDUX]: Dashboard");
-
-	try {
-		// ---------------------------------------------------------------
-		// Query raw data from backend api;
-		const response1 = await FRANKENCOIN_API_CLIENT.get("/analytics/dailyLog/json");
-		dispatch(slice.actions.setDailyLog(response1.data as ApiDailyLog));
-
-		// ---------------------------------------------------------------
-		// Finalizing, loaded set to true
-		dispatch(slice.actions.setLoaded(true));
-	} catch (error) {
-		// ---------------------------------------------------------------
-		// Error, show toast message
-		showErrorToast({ message: "Fetching DailyLog", error });
-	}
+	dispatch(slice.actions.setLoaded(true));
 };
 
 // --------------------------------------------------------------------------------
-export const fetchTransactionLogs = () => async (dispatch: Dispatch<DispatchApiTransactionLog>) => {
-	// ---------------------------------------------------------------
-	CONFIG.verbose && console.log("Loading [REDUX]: Dashboard/TransactionLog");
-
-	try {
-		// ---------------------------------------------------------------
-		// Query raw data from backend api;
-		const response1 = await FRANKENCOIN_API_CLIENT.get("/analytics/transactionLog/json?limit=200");
-		dispatch(slice.actions.setTxLog(response1.data as ApiTransactionLog));
-	} catch (error) {
-		// ---------------------------------------------------------------
-		// Error, show toast message
-		showErrorToast({ message: "Fetching TransactionLog", error });
-	}
+export const fetchTransactionLogs = () => async (_dispatch: Dispatch<DispatchApiTransactionLog>) => {
+	return;
 };

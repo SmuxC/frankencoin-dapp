@@ -3,8 +3,8 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { Address, parseUnits, zeroAddress } from "viem";
 import { normalizeAddress } from "@utils";
-import { useBlockNumber } from "wagmi";
 import { readContract } from "wagmi/actions";
+import { useWatchBlock } from "@hooks";
 import { WAGMI_CONFIG } from "../../../app.config";
 import { RootState } from "../../../redux/redux.store";
 import { useSelector } from "react-redux";
@@ -21,7 +21,7 @@ export default function MonitoringForceSell() {
 	const [auctionPrice, setAuctionPrice] = useState<bigint>(0n);
 	const [isNavigating, setNavigating] = useState(false);
 
-	const { data } = useBlockNumber({ watch: true });
+	const data = useWatchBlock();
 	const router = useRouter();
 	const navigate = useNavigation();
 

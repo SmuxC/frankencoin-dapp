@@ -1,7 +1,9 @@
 import { PositionQuery, ApiPositionsListing, ApiPositionsOwners, ApiPositionsMapping } from "@frankencoin/api";
 import { createSlice, Dispatch } from "@reduxjs/toolkit";
 import { uniqueValues, showErrorToast } from "@utils";
-import { CONFIG, FRANKENCOIN_API_CLIENT } from "../../app.config";
+import { mainnet } from "viem/chains";
+import { CONFIG } from "../../app.config";
+import { loadPositions } from "../../lib/onchain/positions";
 import {
 	PositionsState,
 	DispatchBoolean,
@@ -124,22 +126,16 @@ export const fetchPositionsList =
 
 		try {
 			// ---------------------------------------------------------------
-			// Query raw data from backend api;
-			const response1 = await FRANKENCOIN_API_CLIENT.get("/positions/list");
-			dispatch(slice.actions.setList(response1.data as ApiPositionsListing));
-
-			const responseMapping = await FRANKENCOIN_API_CLIENT.get("/positions/mapping");
-			dispatch(slice.actions.setListMapping(responseMapping.data as ApiPositionsMapping));
-
-			const response2 = await FRANKENCOIN_API_CLIENT.get("/positions/owners");
-			dispatch(slice.actions.setOwnersPositions(response2.data as ApiPositionsOwners));
-
-			const response3 = await FRANKENCOIN_API_CLIENT.get("/positions/requests");
-			dispatch(slice.actions.setRequestsList(response3.data as ApiPositionsMapping));
+			// Read positions directly from chain (discovery via cached log scan).
+			const { list, mapping, owners, requests } = await loadPositions(mainnet.id);
+			dispatch(slice.actions.setList(list));
+			dispatch(slice.actions.setListMapping(mapping));
+			dispatch(slice.actions.setOwnersPositions(owners));
+			dispatch(slice.actions.setRequestsList(requests));
 
 			// ---------------------------------------------------------------
 			// filter positions and dispatch
-			const listArray = response1.data.list as PositionQuery[];
+			const listArray = list.list as PositionQuery[];
 			const openPositions = listArray.filter(
 				(position) => !position.denied && !position.closed && BigInt(position.collateralBalance) > 0n
 			);
@@ -150,7 +146,9 @@ export const fetchPositionsList =
 			const deniedPositioins = listArray.filter((position) => position.denied);
 			const originalPositions = openPositions.filter((position) => position.isOriginal);
 			const openPositionsByOriginal = originalPositions.map((o) => openPositions.filter((p) => p.original == o.original));
-			const openPositionsByCollateral = collateralAddresses.map((con) => openPositions.filter((position) => position.collateral == con));
+			const openPositionsByCollateral = collateralAddresses.map((con) =>
+				openPositions.filter((position) => position.collateral == con)
+			);
 
 			dispatch(slice.actions.setOpenPositions(openPositions));
 			dispatch(slice.actions.setClosedPositions(closedPositioins));

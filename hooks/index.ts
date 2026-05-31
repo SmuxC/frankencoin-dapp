@@ -1,4 +1,6 @@
 // FPS
+export * from "./useActiveAccount";
+export * from "./useWatchBlock";
 export * from "./useEquityTrades";
 export * from "./useFPSAverageStats";
 export * from "./useFPSBalanceHistory";

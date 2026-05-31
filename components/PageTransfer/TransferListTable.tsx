@@ -9,8 +9,7 @@ import AddressInput from "@components/Input/AddressInput";
 import DateInput from "@components/Input/DateInput";
 import { Address, isAddress } from "viem";
 import { useConnection } from "wagmi";
-import { FRANKENCOIN_API_CLIENT } from "../../app.config";
-import { ApiTransferReferenceList, TransferReferenceQuery } from "@frankencoin/api";
+import { TransferReferenceQuery } from "@frankencoin/api";
 import { shortenAddress } from "@utils";
 
 const RESET_DATE = new Date(new Date().getUTCFullYear().toString());
@@ -30,45 +29,9 @@ export default function TransferListTable() {
 	const [end, setEnd] = useState<Date | string>("Today");
 
 	useEffect(() => {
-		// load all, if non is selected.
-		if (sender.length == 0 && recipient.length == 0) {
-			const fetcher = async () => {
-				const data = await FRANKENCOIN_API_CLIENT.get<ApiTransferReferenceList>(`/transfer/reference/list`);
-				if (reference.length == 0) {
-					setFetchedList(data.data.list);
-				} else {
-					setFetchedList(data.data.list.filter((i) => i.reference == reference));
-				}
-			};
-
-			fetcher();
-			return;
-		}
-
-		// guard for address validation
-		if ((sender.length > 0 && !isAddress(sender)) || (recipient.length > 0 && !isAddress(recipient))) return;
-
-		const fetcher = async () => {
-			const params: Record<string, string | number> = {};
-
-			if (recipient.length > 0) params.to = recipient;
-			if (sender.length > 0) params.from = sender;
-
-			if (reference.length > 0) params.reference = reference;
-			if (typeof end != "string") params.end = end.toISOString();
-			params.start = start.toISOString();
-
-			const data = await FRANKENCOIN_API_CLIENT.get<TransferReferenceQuery[]>(
-				`/transfer/reference/history/by/${sender.length > 0 ? "from" : "to"}/${sender.length > 0 ? sender : recipient}`,
-				{
-					params,
-				}
-			);
-
-			setFetchedList(data.data);
-		};
-
-		fetcher();
+		// Transfer-reference history needs an indexer (dropped in the decentralized
+		// build). The list stays empty; sending tokens still works via the card above.
+		setFetchedList([]);
 	}, [sender, recipient, reference, start, end]);
 
 	const sorted: TransferReferenceQuery[] = sortFunction({ list: fetchedList, headers, tab, reverse });

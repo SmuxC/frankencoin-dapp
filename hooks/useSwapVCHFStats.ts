@@ -1,4 +1,5 @@
-import { useBlockNumber, useConnection, useReadContracts } from "wagmi";
+import { useConnection, useReadContracts } from "wagmi";
+import { useWatchBlock } from "./useWatchBlock";
 import { useEffect } from "react";
 import { decodeBigIntCall, normalizeAddress } from "@utils";
 import { Address, erc20Abi, formatUnits, parseUnits, zeroAddress } from "viem";
@@ -77,7 +78,7 @@ export const useSwapVCHFStats = (): SwapVCHFStatsReturn => {
 	const other = ADDRESS[chainId].vchfToken;
 	const bridge = ADDRESS[chainId].stablecoinBridgeVCHF;
 
-	const { data: blockNumber } = useBlockNumber({ watch: true });
+	const blockNumber = useWatchBlock();
 	const { data, refetch, isError, isLoading } = useReadContracts({
 		contracts: [
 			// VCHF token calls

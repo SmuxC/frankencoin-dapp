@@ -5,7 +5,6 @@ import AddressInput from "@components/Input/AddressInput";
 import { useEffect, useState } from "react";
 import AppCard from "@components/AppCard";
 import { Address, isAddress, zeroAddress } from "viem";
-import { FRANKENCOIN_API_CLIENT } from "../app.config";
 import ReportsSavingsYearlyTable from "@components/PageReports/ReportsSavingsYearlyTable";
 import { useFPSBalanceHistory, useFPSEarningsHistory } from "@hooks";
 import ReportsFPSYearlyTable from "@components/PageReports/ReportsFPSYearlyTable";
@@ -14,7 +13,7 @@ import { useRef } from "react";
 import generatePDF, { Margin } from "react-to-pdf";
 import { useRouter } from "next/router";
 import DateInput from "@components/Input/DateInput";
-import { ApiOwnerDebt, ApiOwnerFees, ApiOwnerValueLocked, ApiSavingsActivity } from "@frankencoin/api";
+import { ApiSavingsActivity } from "@frankencoin/api";
 import { normalizeAddress } from "@utils";
 
 export type OwnerPositionFees = {
@@ -71,49 +70,14 @@ export default function ReportPage() {
 			return;
 		}
 
-		setLoading(true);
-		const fetcher = async () => {
-			try {
-				const responsePositionsFees = await FRANKENCOIN_API_CLIENT.get(`/positions/owner/${reportingAddress}/fees`);
-				setOwnerPositionFees((responsePositionsFees.data as ApiOwnerFees).map((i) => ({ t: i.t, f: BigInt(i.f) })));
-
-				const responsePositionsDebt = await FRANKENCOIN_API_CLIENT.get(`/positions/owner/${reportingAddress}/debt`);
-				const debt = responsePositionsDebt.data as ApiOwnerDebt;
-
-				const yearly: OwnerPositionDebt[] = Object.keys(debt).map((y) => ({
-					y: Number(y),
-					d: BigInt(debt[Number(y)]),
-				}));
-
-				setOwnerPositionDebt(yearly);
-
-				const responsePositionsValueLocked = await FRANKENCOIN_API_CLIENT.get(`/prices/owner/${reportingAddress}/valueLocked`);
-				const value = responsePositionsValueLocked.data as ApiOwnerValueLocked;
-
-				const yearlyValue: OwnerPositionValueLocked[] = Object.keys(value).map((y) => ({
-					y: Number(y),
-					v: BigInt(value[Number(y)]),
-				}));
-
-				setOwnerPositionValueLocked(yearlyValue);
-
-				const responseSavings = await FRANKENCOIN_API_CLIENT.get(`/savings/core/activity/${reportingAddress}`);
-				setSavings(responseSavings.data as ApiSavingsActivity);
-
-				// clear all errors
-				setError("");
-			} catch (error) {
-				console.log(error);
-				if (typeof error == "string") {
-					setError(error);
-				} else {
-					setError("Something did not work correctly");
-				}
-			}
-		};
-
-		fetcher();
-		setLoading(false);
+		// The accounting report aggregates per-owner fee/debt/value-locked and
+		// savings history — all indexed data, dropped in the decentralized build.
+		// The page renders empty for now.
+		setOwnerPositionFees([]);
+		setOwnerPositionDebt([]);
+		setOwnerPositionValueLocked([]);
+		setSavings([]);
+		setError("");
 	}, [reportingAddress]);
 
 	useEffect(() => {

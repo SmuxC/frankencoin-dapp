@@ -6,7 +6,9 @@ import {
 	ApiChallengesPositions,
 	ApiChallengesPrices,
 } from "@frankencoin/api";
-import { CONFIG, FRANKENCOIN_API_CLIENT } from "../../app.config";
+import { CONFIG } from "../../app.config";
+import { mainnet } from "viem/chains";
+import { loadChallenges } from "../../lib/onchain/challenges";
 import { showErrorToast } from "@utils";
 import {
 	ChallengesState,
@@ -99,21 +101,13 @@ export const fetchChallengesList =
 
 		try {
 			// ---------------------------------------------------------------
-			// Query raw data from backend api
-			const response1 = await FRANKENCOIN_API_CLIENT.get("/challenges/list");
-			dispatch(slice.actions.setList(response1.data as ApiChallengesListing));
-
-			const responseMapping = await FRANKENCOIN_API_CLIENT.get("/challenges/mapping");
-			dispatch(slice.actions.setMapping(responseMapping.data as ApiChallengesMapping));
-
-			const response2 = await FRANKENCOIN_API_CLIENT.get("/challenges/challengers");
-			dispatch(slice.actions.setChallengers(response2.data as ApiChallengesChallengers));
-
-			const response3 = await FRANKENCOIN_API_CLIENT.get("/challenges/positions");
-			dispatch(slice.actions.setPositions(response3.data as ApiChallengesPositions));
-
-			const response4 = await FRANKENCOIN_API_CLIENT.get("/challenges/prices");
-			dispatch(slice.actions.setPrices(response4.data as ApiChallengesPrices));
+			// Read challenges directly from chain (ChallengeStarted scan + current state)
+			const { list, mapping, challengers, positions, prices } = await loadChallenges(mainnet.id);
+			dispatch(slice.actions.setList(list));
+			dispatch(slice.actions.setMapping(mapping));
+			dispatch(slice.actions.setChallengers(challengers));
+			dispatch(slice.actions.setPositions(positions));
+			dispatch(slice.actions.setPrices(prices));
 
 			// ---------------------------------------------------------------
 			// Finalizing, loaded set to true

@@ -1,6 +1,4 @@
 import { createSlice, Dispatch } from "@reduxjs/toolkit";
-import { FRANKENCOIN_API_CLIENT } from "../../app.config";
-import { showErrorToast } from "@utils";
 import { ApiCCIPChain, ApiCCIPProposal, BridgeState } from "./bridge.types";
 
 export const initialState: BridgeState = {
@@ -31,17 +29,10 @@ export const slice = createSlice({
 
 export const { reducer } = slice;
 
+// CCIP bridge governance proposals come from the API and are dropped in the
+// decentralized (mainnet-only) build. No-op so the governance UI renders empty.
 export const fetchBridge = () => async (dispatch: Dispatch) => {
-	try {
-		const [proposalsRes, chainsRes] = await Promise.all([
-			FRANKENCOIN_API_CLIENT.get<{ list: ApiCCIPProposal[] }>("/bridge/proposals"),
-			FRANKENCOIN_API_CLIENT.get<{ list: ApiCCIPChain[] }>("/bridge/chains"),
-		]);
-		dispatch(slice.actions.setProposals(proposalsRes.data.list));
-		dispatch(slice.actions.setChains(chainsRes.data.list));
-		dispatch(slice.actions.setLoaded(true));
-	} catch (error) {
-		showErrorToast({ message: "Fetching Bridge", error });
-		dispatch(slice.actions.hasError(String(error)));
-	}
+	dispatch(slice.actions.setProposals([]));
+	dispatch(slice.actions.setChains([]));
+	dispatch(slice.actions.setLoaded(true));
 };

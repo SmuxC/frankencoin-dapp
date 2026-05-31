@@ -7,7 +7,9 @@ import {
 	DispatchApiPriceMarketChart,
 } from "./prices.types";
 import { ApiPriceERC20, ApiPriceERC20Mapping, ApiPriceMapping, ApiPriceMarketChart } from "@frankencoin/api";
-import { CONFIG, FRANKENCOIN_API_CLIENT } from "../../app.config";
+import { CONFIG } from "../../app.config";
+import { mainnet } from "viem/chains";
+import { loadPrices } from "../../lib/onchain/erc20meta";
 import { showErrorToast } from "@utils";
 import { zeroAddress } from "viem";
 import { ChainId } from "@frankencoin/zchf";
@@ -95,18 +97,13 @@ export const fetchPricesList =
 
 		try {
 			// ---------------------------------------------------------------
-			// Query raw data from backend api
-			const response1 = await FRANKENCOIN_API_CLIENT.get("/prices/mapping");
-			dispatch(slice.actions.setListMapping(response1.data as ApiPriceMapping));
-
-			const response2 = await FRANKENCOIN_API_CLIENT.get("/prices/erc20/mint");
-			dispatch(slice.actions.setMintERC20Info(response2.data as ApiPriceERC20));
-
-			const response3 = await FRANKENCOIN_API_CLIENT.get("/prices/erc20/collateral");
-			dispatch(slice.actions.setCollateralERC20Info(response3.data as ApiPriceERC20Mapping));
-
-			const response4 = await FRANKENCOIN_API_CLIENT.get("/prices/erc20/fps");
-			dispatch(slice.actions.setFpsERC20Info(response4.data as ApiPriceERC20));
+			// On-chain ERC20 metadata only. Market/fiat prices are dropped — the
+			// protocol is ZCHF-denominated and liquidates by auction (no oracle).
+			const { mint, fps, collateral, mapping } = await loadPrices(mainnet.id);
+			dispatch(slice.actions.setListMapping(mapping));
+			dispatch(slice.actions.setMintERC20Info(mint));
+			dispatch(slice.actions.setCollateralERC20Info(collateral));
+			dispatch(slice.actions.setFpsERC20Info(fps));
 
 			// ---------------------------------------------------------------
 			// Finalizing, loaded set to true
@@ -119,18 +116,8 @@ export const fetchPricesList =
 	};
 
 // --------------------------------------------------------------------------------
-export const fetchMarketChart = () => async (dispatch: Dispatch<DispatchApiPriceMarketChart>) => {
-	// ---------------------------------------------------------------
-	CONFIG.verbose && console.log("Loading [REDUX]: MarketChart");
-
-	try {
-		// ---------------------------------------------------------------
-		// Query raw data from backend api
-		const response1 = await FRANKENCOIN_API_CLIENT.get("/prices/marketChart");
-		dispatch(slice.actions.setMarketChart(response1.data as ApiPriceMarketChart));
-	} catch (error) {
-		// ---------------------------------------------------------------
-		// Error, show toast message
-		showErrorToast({ message: "Fetching MarketChart", error });
-	}
+// Market chart history is dropped (needs an indexer). Kept as a no-op so callers
+// (if any remain) don't break.
+export const fetchMarketChart = () => async (_dispatch: Dispatch<DispatchApiPriceMarketChart>) => {
+	return;
 };

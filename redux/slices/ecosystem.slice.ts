@@ -1,5 +1,7 @@
 import { createSlice, Dispatch } from "@reduxjs/toolkit";
-import { CONFIG, FRANKENCOIN_API_CLIENT } from "../../app.config";
+import { CONFIG } from "../../app.config";
+import { mainnet } from "viem/chains";
+import { loadEcosystem } from "../../lib/onchain/ecosystem";
 import { showErrorToast } from "@utils";
 import {
 	DispatchApiEcosystemCollateralPositions,
@@ -121,24 +123,15 @@ export const fetchEcosystem =
 
 		try {
 			// ---------------------------------------------------------------
-			// Query raw data from backend api
-			const response1 = await FRANKENCOIN_API_CLIENT.get("/ecosystem/collateral/positions");
-			dispatch(slice.actions.setCollateralPositions(response1.data as ApiEcosystemCollateralPositions));
-
-			const response2 = await FRANKENCOIN_API_CLIENT.get("/ecosystem/collateral/stats");
-			dispatch(slice.actions.setCollateralStats(response2.data as ApiEcosystemCollateralStats));
-
-			const response3 = await FRANKENCOIN_API_CLIENT.get("/ecosystem/fps/info");
-			dispatch(slice.actions.setFpsInfo(response3.data as ApiEcosystemFpsInfo));
-
-			const response4 = await FRANKENCOIN_API_CLIENT.get("/ecosystem/frankencoin/info");
-			dispatch(slice.actions.setFrankencoinInfo(response4.data as ApiEcosystemFrankencoinInfo));
-
-			const response5 = await FRANKENCOIN_API_CLIENT.get("/ecosystem/minter/list");
-			dispatch(slice.actions.setFrankencoinMinters(response5.data as ApiMinterListing));
-
-			const response6 = await FRANKENCOIN_API_CLIENT.get("/ecosystem/frankencoin/totalsupply");
-			dispatch(slice.actions.setFrankencoinSupply(response6.data as ApiEcosystemFrankencoinSupply));
+			// Read ecosystem stats directly from chain (Frankencoin/Equity reads +
+			// MinterApplied scan). Collateral TVL needs market prices (dropped).
+			const { frankencoinInfo, fpsInfo, minters, supply, collateralPositions, collateralStats } = await loadEcosystem(mainnet.id);
+			dispatch(slice.actions.setCollateralPositions(collateralPositions));
+			dispatch(slice.actions.setCollateralStats(collateralStats));
+			dispatch(slice.actions.setFpsInfo(fpsInfo));
+			dispatch(slice.actions.setFrankencoinInfo(frankencoinInfo));
+			dispatch(slice.actions.setFrankencoinMinters(minters));
+			dispatch(slice.actions.setFrankencoinSupply(supply));
 
 			// ---------------------------------------------------------------
 			// Finalizing, loaded set to true

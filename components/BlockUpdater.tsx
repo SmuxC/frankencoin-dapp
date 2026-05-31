@@ -1,8 +1,10 @@
-import { useConnection, useBlockNumber } from "wagmi";
+import { useBlockNumber } from "wagmi";
 import { Address } from "viem";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState, store } from "../redux/redux.store";
+import { useActiveAccount } from "../hooks/useActiveAccount";
 import { fetchPositionsList } from "../redux/slices/positions.slice";
 import { fetchPricesList } from "../redux/slices/prices.slice";
 import { useIsConnectedToCorrectChain } from "../hooks/useWalletConnectStats";
@@ -23,7 +25,10 @@ let loading: boolean = false;
 
 export default function BockUpdater({ children }: { children?: React.ReactElement | React.ReactElement[] }) {
 	const { error, data } = useBlockNumber({ chainId: mainnet.id, watch: true });
-	const { address } = useConnection();
+	// Use the active account (view-only "watch" address if set, else the wallet)
+	// so per-account data (savings) reflects whichever address is being inspected.
+	const { address } = useActiveAccount();
+	const router = useRouter();
 	const isConnectedToCorrectChain = useIsConnectedToCorrectChain();
 
 	const [initialized, setInitialized] = useState<boolean>(false);
@@ -145,7 +150,9 @@ export default function BockUpdater({ children }: { children?: React.ReactElemen
 
 	// --------------------------------------------------------------------------------
 	// Loading Guard
-	if (initialized) {
+	// The /onchain-status diagnostic page must be usable immediately — it should
+	// not sit behind the very on-chain init it exists to test.
+	if (initialized || router.pathname === "/onchain-status") {
 		return <>{children}</>;
 	} else {
 		return (
